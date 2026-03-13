@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>视频大模型训练学习路线</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --bg-card: #12121a;
+    --bg-card-hover: #1a1a28;
+    --border: #2a2a3a;
+    --text: #e8e8f0;
+    --text-dim: #8888a0;
+    --text-muted: #555568;
+    --accent-1: #ff6b35;
+    --accent-2: #7c5cfc;
+    --accent-3: #00d4aa;
+    --accent-4: #ff4081;
+    --accent-5: #ffd740;
+    --accent-6: #40c4ff;
+    --gradient-fire: linear-gradient(135deg, #ff6b35, #ff4081);
+    --gradient-ocean: linear-gradient(135deg, #7c5cfc, #40c4ff);
+    --gradient-forest: linear-gradient(135deg, #00d4aa, #7c5cfc);
+    --gradient-sun: linear-gradient(135deg, #ffd740, #ff6b35);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* Hero */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 40px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: 
+      radial-gradient(ellipse at 30% 20%, rgba(124,92,252,0.12) 0%, transparent 50%),
+      radial-gradient(ellipse at 70% 80%, rgba(255,107,53,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(0,212,170,0.05) 0%, transparent 70%);
+    animation: bgShift 20s ease-in-out infinite alternate;
+  }
+  @keyframes bgShift {
+    0% { transform: translate(0, 0) rotate(0deg); }
+    100% { transform: translate(-3%, -3%) rotate(3deg); }
+  }
+  .hero-content { position: relative; z-index: 1; max-width: 900px; }
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.5rem, 6vw, 5rem);
+    font-weight: 900;
+    background: var(--gradient-fire);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 20px;
+    letter-spacing: -1px;
+  }
+  .hero .subtitle {
+    font-size: 1.15rem;
+    color: var(--text-dim);
+    max-width: 650px;
+    margin: 0 auto 40px;
+    font-weight: 300;
+  }
+  .hero .tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 40px;
+  }
+  .hero .tag {
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.03);
+    color: var(--text-dim);
+  }
+  .scroll-hint {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    animation: bounce 2s infinite;
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(8px); }
+  }
+
+  /* Navigation */
+  .nav-bar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10,10,15,0.92);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    overflow-x: auto;
+  }
+  .nav-bar-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    gap: 0;
+    white-space: nowrap;
+  }
+  .nav-bar a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 14px 18px;
+    transition: all 0.2s;
+    border-bottom: 2px solid transparent;
+    flex-shrink: 0;
+  }
+  .nav-bar a:hover {
+    color: var(--text);
+    border-bottom-color: var(--accent-1);
+  }
+
+  /* Sections */
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+  section {
+    padding: 80px 0;
+  }
+  .section-header {
+    margin-bottom: 50px;
+  }
+  .section-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 12px;
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 4px;
+  }
+  .section-header h2 {
+    font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+    font-weight: 900;
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+  }
+  .section-header p {
+    color: var(--text-dim);
+    font-size: 1rem;
+    max-width: 700px;
+    font-weight: 300;
+  }
+
+  /* Phase colors */
+  .phase-0 .section-label { background: rgba(255,215,64,0.12); color: var(--accent-5); }
+  .phase-0 h2 { color: var(--accent-5); }
+  .phase-1 .section-label { background: rgba(124,92,252,0.12); color: var(--accent-2); }
+  .phase-1 h2 { color: var(--accent-2); }
+  .phase-2 .section-label { background: rgba(0,212,170,0.12); color: var(--accent-3); }
+  .phase-2 h2 { color: var(--accent-3); }
+  .phase-3 .section-label { background: rgba(255,107,53,0.12); color: var(--accent-1); }
+  .phase-3 h2 { color: var(--accent-1); }
+  .phase-4 .section-label { background: rgba(255,64,129,0.12); color: var(--accent-4); }
+  .phase-4 h2 { color: var(--accent-4); }
+  .phase-5 .section-label { background: rgba(64,196,255,0.12); color: var(--accent-6); }
+  .phase-5 h2 { color: var(--accent-6); }
+
+  /* Cards */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 20px;
+  }
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .card:hover {
+    background: var(--bg-card-hover);
+    transform: translateY(-3px);
+    border-color: rgba(255,255,255,0.1);
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+  }
+  .card.t-course::before { background: var(--gradient-ocean); }
+  .card.t-paper::before { background: var(--gradient-fire); }
+  .card.t-repo::before { background: var(--gradient-forest); }
+  .card.t-practice::before { background: var(--gradient-sun); }
+
+  .card-type {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+  }
+  .card.t-course .card-type { color: var(--accent-6); }
+  .card.t-paper .card-type { color: var(--accent-1); }
+  .card.t-repo .card-type { color: var(--accent-3); }
+  .card.t-practice .card-type { color: var(--accent-5); }
+  .card.t-tool .card-type { color: var(--accent-4); }
+  .card.t-tool::before { background: linear-gradient(135deg, var(--accent-4), var(--accent-2)); }
+
+  .card h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    line-height: 1.4;
+  }
+  .card h3 a {
+    color: var(--text);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .card h3 a:hover { color: var(--accent-6); }
+  .card .desc {
+    font-size: 0.88rem;
+    color: var(--text-dim);
+    margin-bottom: 14px;
+    line-height: 1.6;
+  }
+  .card .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .card .tags span {
+    font-size: 0.72rem;
+    padding: 3px 10px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.04);
+    color: var(--text-muted);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .card .difficulty {
+    display: inline-block;
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+  .diff-beginner { background: rgba(0,212,170,0.12); color: var(--accent-3); }
+  .diff-intermediate { background: rgba(255,215,64,0.12); color: var(--accent-5); }
+  .diff-advanced { background: rgba(255,64,129,0.12); color: var(--accent-4); }
+
+  /* Knowledge map */
+  .knowledge-map {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  .km-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+  }
+  .km-item h4 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .km-item ul {
+    list-style: none;
+    padding: 0;
+  }
+  .km-item li {
+    font-size: 0.84rem;
+    color: var(--text-dim);
+    padding: 3px 0;
+    padding-left: 16px;
+    position: relative;
+  }
+  .km-item li::before {
+    content: '›';
+    position: absolute;
+    left: 0;
+    color: var(--text-muted);
+  }
+
+  /* Roadmap timeline */
+  .timeline {
+    position: relative;
+    padding-left: 30px;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--accent-2), var(--accent-3), var(--accent-1), var(--accent-4));
+  }
+  .tl-item {
+    position: relative;
+    padding-bottom: 40px;
+  }
+  .tl-item::before {
+    content: '';
+    position: absolute;
+    left: -35px;
+    top: 6px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid var(--accent-2);
+    background: var(--bg);
+  }
+  .tl-item h4 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .tl-item .tl-time {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .tl-item p {
+    font-size: 0.88rem;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+  .tl-item .tl-links {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .tl-item .tl-links a {
+    font-size: 0.78rem;
+    color: var(--accent-6);
+    text-decoration: none;
+    padding: 3px 10px;
+    border: 1px solid rgba(64,196,255,0.2);
+    border-radius: 8px;
+    transition: all 0.2s;
+  }
+  .tl-item .tl-links a:hover {
+    background: rgba(64,196,255,0.1);
+    border-color: var(--accent-6);
+  }
+
+  /* Concept explainer */
+  .concept-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+  .concept-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .concept-card:hover {
+    border-color: rgba(124,92,252,0.3);
+    background: var(--bg-card-hover);
+  }
+  .concept-card h4 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .concept-card .concept-brief {
+    font-size: 0.84rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+  .concept-card .concept-detail {
+    display: none;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    font-size: 0.84rem;
+    color: var(--text-dim);
+    line-height: 1.7;
+  }
+  .concept-card.open .concept-detail { display: block; }
+  .concept-card .expand-hint {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-top: 8px;
+  }
+  .concept-card.open .expand-hint { display: none; }
+
+  /* Hardware section */
+  .hw-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  .hw-table th, .hw-table td {
+    padding: 14px 18px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.88rem;
+  }
+  .hw-table th {
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .hw-table td { color: var(--text-dim); }
+  .hw-table tr:hover td { color: var(--text); }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 60px 20px;
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.82rem;
+  }
+
+  @media (max-width: 768px) {
+    .card-grid, .knowledge-map, .concept-grid {
+      grid-template-columns: 1fr;
+    }
+    section { padding: 50px 0; }
+    .nav-bar a { padding: 12px 14px; font-size: 0.8rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-content">
+    <h1>视频大模型<br>从零到商用</h1>
+    <p class="subtitle">
+      系统化学习路线 · 从小白到能训练出 SeedDance 级别的视频生成模型<br>
+      涵盖数学基础、深度学习、Diffusion、DiT、视频生成全链路
+    </p>
+    <div class="tag-row">
+      <span class="tag">Diffusion Models</span>
+      <span class="tag">Transformer / DiT</span>
+      <span class="tag">VAE / Tokenizer</span>
+      <span class="tag">CLIP / T5</span>
+      <span class="tag">视频数据工程</span>
+      <span class="tag">分布式训练</span>
+      <span class="tag">LoRA 微调</span>
+      <span class="tag">Wan2.1 / CogVideoX / HunyuanVideo</span>
+    </div>
+  </div>
+  <div class="scroll-hint">↓ 向下滚动开始学习</div>
+</div>
+
+<!-- NAV -->
+<nav class="nav-bar">
+  <div class="nav-bar-inner">
+    <a href="#overview">总览</a>
+    <a href="#phase0">P0 · 基础</a>
+    <a href="#phase1">P1 · 深度学习</a>
+    <a href="#phase2">P2 · 生成模型</a>
+    <a href="#phase3">P3 · 视频生成</a>
+    <a href="#phase4">P4 · 实战训练</a>
+    <a href="#phase5">P5 · 商用</a>
+    <a href="#concepts">核心概念</a>
+    <a href="#hardware">硬件指南</a>
+  </div>
+</nav>
+
+<!-- OVERVIEW / ARCHITECTURE MAP -->
+<section id="overview">
+<div class="container">
+  <div class="section-header">
+    <h2 style="color:var(--text)">🗺️ 视频生成模型架构全景</h2>
+    <p>理解一个视频大模型（如 SeedDance 2.0、Sora、Kling）内部到底有什么组件</p>
+  </div>
+  <div class="knowledge-map">
+    <div class="km-item">
+      <h4>📝 文本编码器</h4>
+      <ul>
+        <li>CLIP Text Encoder（OpenAI）</li>
+        <li>T5-XXL（Google，11B 参数）</li>
+        <li>将文字 prompt 编码为语义向量</li>
+        <li>决定了模型理解指令的能力上限</li>
+      </ul>
+    </div>
+    <div class="km-item">
+      <h4>🎨 VAE / 视频 Tokenizer</h4>
+      <ul>
+        <li>将视频帧压缩到潜空间（Latent Space）</li>
+        <li>3D-VAE：同时压缩空间+时间维度</li>
+        <li>CausalConv3D：因果卷积保证时序一致</li>
+        <li>压缩比通常 8×8（空间）× 4（时间）</li>
+      </ul>
+    </div>
+    <div class="km-item">
+      <h4>🧠 去噪骨干网络</h4>
+      <ul>
+        <li>早期：3D U-Net（如 SVD、AnimateDiff）</li>
+        <li>当前主流：DiT（Diffusion Transformer）</li>
+        <li>全注意力机制处理时空 token</li>
+        <li>参数规模 1B ~ 14B</li>
+      </ul>
+    </div>
+    <div class="km-item">
+      <h4>⚡ 扩散调度器</h4>
+      <ul>
+        <li>DDPM / DDIM / Flow Matching</li>
+        <li>控制噪声添加和去除的过程</li>
+        <li>Rectified Flow（直线流）更高效</li>
+        <li>Consistency Models 加速采样</li>
+      </ul>
+    </div>
+    <div class="km-item">
+      <h4>🎮 条件控制模块</h4>
+      <ul>
+        <li>Cross-Attention：文本条件注入</li>
+        <li>ControlNet：姿态/深度/边缘控制</li>
+        <li>IP-Adapter：图像参考风格迁移</li>
+        <li>Camera Control：镜头运动控制</li>
+      </ul>
+    </div>
+    <div class="km-item">
+      <h4>📊 训练基础设施</h4>
+      <ul>
+        <li>多 GPU / 多节点分布式训练</li>
+        <li>DeepSpeed ZeRO / FSDP</li>
+        <li>混合精度 BF16 / FP16</li>
+        <li>梯度检查点（节省显存）</li>
+      </ul>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- PHASE 0: FOUNDATIONS -->
+<section id="phase0" class="phase-0">
+<div class="container">
+  <div class="section-header">
+    <span class="section-label">Phase 0 · 预计 4-6 周</span>
+    <h2>数学 + Python + 深度学习基础</h2>
+    <p>如果你是纯小白，这些是必须的前置知识。已有基础可以跳过。</p>
+  </div>
+  <div class="card-grid">
+
+    <div class="card t-course">
+      <span class="card-type">课程</span>
+      <span class="difficulty diff-beginner">入门</span>
+      <h3><a href="https://www.3blue1brown.com/topics/neural-networks" target="_blank">3Blue1Brown — 神经网络本质</a></h3>
+      <p class="desc">最好的直觉建立材料。用可视化讲清楚神经网络、反向传播、梯度下降。看完你会真正「理解」而不只是「知道」。</p>
+      <div class="tags"><span>可视化</span><span>数学直觉</span><span>免费</span></div>
+    </div>
+
+    <div class="card t-course">
+      <span class="card-type">课程</span>
+      <span class="difficulty diff-beginner">入门</span>
+      <h3><a href="https://www.3blue1brown.com/topics/linear-algebra" target="_blank">3Blue1Brown — 线性代数的本质</a></h3>
+      <p class="desc">矩阵、向量、特征值——这些在深度学习里无处不在。这个系列让你真正理解线性变换的几何意义。</p>
+      <div class="tags"><span>线性代数</span><span>可视化</span><span>免费</span></div>
+    </div>
+
+    <div class="card t-course">
+      <span class="card-type">课程</span>
+      <span class="difficulty diff-beginner">入门</span>
+      <h3><a href="https://pytorch.org/tutorials/beginner/deep_learning_60min_blitz.html" target="_blank">PyTorch 官方 60 分钟入门</a></h3>
+      <p class="desc">快速上手 PyTorch：Tensor 操作、自动微分、构建神经网络。整个视频大模型生态都建立在 PyTorch 之上。</p>
+      <div class="tags"><span>PyTorch</span><span>动手</span><span>必学</span></div>
+    </div>
+
+    <div class="card t-course">
+      <span class="card-type">课程</span>
+      <span class="difficulty diff-beginner">入门</span>
+      <h3><a href="https://course.fast.ai/" target="_blank">fast.ai — Practical Deep Learning</a></h3>
+      <p class="desc">Jeremy Howard 的经典课程，自顶向下教学。先让你跑起来模型，再逐步深入原理。非常适合工程师背景的人。</p>
+      <div class="tags"><span>实践导向</span><span>免费</span><span>PyTorch</span></div>
+    </div>
+
+    <div class="card t-course">
+      <span class="card-type">课程</span>
+      <span class="difficulty diff-beginner">入门</span>
+      <h3><a href="https://cs231n.stanford.edu/" target="_blank">Stanford CS231n — 计算机视觉</a></h3>
+      <p class="desc">CNN、图像分类、目标检测——视频模型的基础就是对图像的理解。课程笔记和作业质量极高。</p>
+      <div class="tags"><span>Stanford</span><span>CV基础</span><span>免费</span></div>
+    </div>
+
+    <div class="card t-paper">
+      <span class="card-type">必读</span>
+      <span class="difficulty diff-beginner">入门</span>
+      <h3><a href="https://jalammar.github.io/illustrated-transformer/" target="_blank">The Illustrated Transformer</a></h3>
+      <p class="desc">Jay Alammar 的经典图文。Transformer 是 DiT 的核心，不理解 Self-Attention 就无法理解现代视频模型。</p>
+      <div class="tags"><span>Transformer</span><span>图文教程</span><span>必读</span></div>
+    </div>
+
+  </div>
+</div>
+</section>
+
+<!-- PHASE 1: Deep Learning Core -->
+<section id="phase1" class="phase-1">
+<div class="container">
+  <div class="section-header">
+    <span class="section-label">Phase 1 · 预计 4-6 周</span>
+    <h2>Transformer + 视觉基础</h2>
+    <p>深入理解支撑视频大模型的核心架构：Transformer、ViT、注意力机制</p>
+  </div>
+  <div class="card-grid">
+
+    <div class="card t-course">
+      <span class="card-type">课程</span>
+      <span class="difficulty diff-intermediate">中级</span>
+      <h3><a href="https://cs25.stanford.edu/" target="_blank">Stanford CS25 — Transformers United</a></h3>
+      <p class="desc">Stanford 专门讲 Transformer 及其变体的课程。涵盖 Vision Transformer、多模态 Transformer 等前沿内容。</p>
+      <div class="tags"><span>Transformer</span><span>Stanford</span><span>前沿</span></div>
+    </div>
+
+    <div class="card t-paper">
+      <span class="card-type">论文</span>
+      <span class="difficulty diff-intermediate">中级</span>
+      <h3><a href="https://arxiv.org/abs/1706.03762" target="_blank">Attention Is All You Need</a></h3>
+      <p class="desc">Transformer 原始论文。理解 Multi-Head Attention、Positional Encoding、Layer Norm。一切的起点。</p>
+      <div class="tags"><span>论文</span><span>Transformer</span><span>经典</span></div>
+    </div>
+
+    <div class="card t-paper">
+      <span class="card-type">论文</span>
+      <span class="difficulty diff-intermediate">中级</span>
+      <h3><a href="https://arxiv.org/abs/2010.11929" target="_blank">ViT — An Image is Worth 16x16 Words</a></h3>
+      <p class="desc">Vision Transformer，将图像分割成 patch 当 token 处理。DiT 的直接前身，视频模型都基于这个思路。</p>
+      <div class="tags"><span>ViT</span><span>Vision</span><span>重要</span></div>
+    </div>
+
+    <div class="card t-course">
+      <span class="card-type">课程</span>
+      <span class="difficulty diff-intermediate">中级</span>
+      <h3><a href="https://huggingface.co/learn/computer-vision-course" target="_blank">Hugging Face — 计算机视觉课程</a></h3>
+      <p class="desc">Hugging Face 出品的免费 CV 课程，涵盖图像分类、分割、生成模型，紧贴工程实践。</p>
+      <div class="tags"><span>HuggingFace</span><span>实践</span><span>免费</span></div>
+    </div>
+
+    <div class="card t-paper">
+      <span class="card-type">论文</span>
+      <span class="difficulty diff-intermediate">中级</span>
+      <h3><a href="https://arxiv.org/abs/2103.00020" target="_blank">CLIP — Learning Transferable Visual Models</a></h3>
+      <p class="desc">OpenAI 的 CLIP，实现文本-图像对齐。视频模型用 CLIP 来理解文本 prompt 和视觉内容的关系。</p>
+      <div class="tags"><span>CLIP</span><span>多模态</span><span>OpenAI</span></div>
+    </div>
+
+    <div class="card t-paper">
+      <span class="card-type">论文</span>
+      <span class="difficulty diff-intermediate">中级</span>
+      <h3><a href="https://arxiv.org/abs/1312.6114" target="_blank">VAE — Auto-Encoding Variational Bayes</a></h3>
+      <p class="desc">变分自编码器。视频模型的 3D-VAE 就是从这里演变来的，理解潜空间编码是关键。</p>
+      <div class="tags"><span>VAE</span><span>生成模型</span><span>基础</span></div>
+    </div>
+
+  </div>
+</div>
+</section>
+
+<!-- PHASE 2: Generative Models / Diffusion -->
+<section id="phase2" class="phase-2">
+<div class="container">
+  <div class="section-header">
+    <span class="section-label">Phase 2 · 预计 6-8 周（最核心阶段）</span>
+    <h2>扩散模型 + 图像生成</h2>
+    <p>这是视频模型的理论核心。先掌握图像扩散，再扩展到视频。</p>
+  </div>
+  <div class="card-grid">
+
+    <div class="card t-course">
+      <span class="card-type">课程 ★★★</span>
+      <span class="difficulty diff-intermediate">中级</span>
+      <h3><a href="https://huggingface.co/learn/diffusion-course" target="_blank">Hugging Face — Diffusion Models 课程</a></h3>
+      <p class="desc">最好的扩散模型入门实践课程。从零实现 DDPM，用 diffusers 库训练你的第一个扩散模型。带代码、作业。</p>
+      <div class="tags"><span>Diffusion</span><span>动手</span><span>必学</span><span>免费</span></div>
+    </div>
+
+    <div class="card t-paper">
+      <span class="card-type">论文 ★★★</span>
+      <span class="difficulty diff-intermediate">中级</span>
+      <h3><a href="https://arxiv.org/abs/2006.11239" target="_blank">DDPM — Denoising Diffusion Probabilistic Models</a></h3>
+      <p class="desc">现代扩散模型的奠基论文。理解前向加噪、反向去噪、噪声预测网络。所有视频模型都基于此。</p>
+      <div class="tags"><span>DDPM</span><span>必读</span><span>扩散基础</span></div>
+    </div>
+
+    <div class="card t-course">
+      <span class="card-type">博客 ★★★</span>
+      <span class="difficulty diff-intermediate">中级</span>
+      <h3><a href="https://lilianweng.github.io/posts/2021-07-11-diffusion-models/" target="_blank">Lilian Weng — What are Diffusion Models?</a></h3>
+      <p class="desc">OpenAI 研究员的经典博文，从数学推导到直觉理解。非常清晰地推导了 DDPM 的 Loss 函数。</p>
+      <div class="tags"><span>数学推导</span><span>深度</span><span>必读</span></div>
+    </div>
+
+    <div class="card t-paper">
+      <span class="card-type">论文</span>
+      <span class="difficulty diff-advanced">进阶</span>
+      <h3><a href="https://arxiv.org/abs/2112.10752" target="_blank">LDM / Stable Diffusion — Latent Diffusion Models</a></h3>
+      <p class="desc">在潜空间做扩散而不是像素空间。这是 Stable Diffusion 的基础，也是所有现代视频模型的核心思路。</p>
+      <div class="tags"><span>LDM</span><span>潜空间</span><span>重要</span></div>
+    </div>
+
+    <div class="card t-paper">
+      <span class="card-type">论文 ★★★</span>
+      <span class="difficulty diff-advanced">进阶</span>
+      <h3><a href="https://arxiv.org/abs/2212.09748" target="_blank">DiT — Scalable Diffusion Models with Transformers</a></h3>
+      <p class="desc">Meta 的 DiT，用 Transformer 替代 U-Net 做去噪。这是 Sora、Wan2.1、SeedDance 等现代视频模型的架构基础。</p>
+      <div class="tags"><span>DiT</span><span>核心架构</span><span>必读</span></div>
+    </div>
+
+    <div class="card t-paper">
+      <span class="card-type">论文</span>
+      <span class="difficulty diff-advanced">进阶</span>
+      <h3><a href="https://arxiv.org/abs/2210.02747" target="_blank">Flow Matching for Generative Modeling</a></h3>
+      <p class="desc">Flow Matching / Rectified Flow，比传统 DDPM 更高效的训练范式。新一代视频模型（如 Wan2.1）普遍采用。</p>
+      <div class="tags"><span>Flow Matching</span><span>新范式</span><span>重要</span></div>
+    </div>
+
+    <div class="card t-paper">
+      <span class="card-type">论文</span>
+      <span class="difficulty diff-intermediate">中级</span>
+      <h3><a href="https://arxiv.org/abs/2207.12598" target="_blank">Classifier-Free Guidance (CFG)</a></h3>
+      <p class="desc">如何让生成结果更好地遵循文本指令？CFG 是关键技巧，理解 guidance scale 的工作原理。</p>
+      <div class="tags"><span>CFG</span><span>训练技巧</span><span>必学</span></div>
+    </div>
+
+    <div class="card t-repo">
+      <span class="card-type">实践项目</span>
+      <span class="difficulty diff-intermediate">中级</span>
+      <h3><a href="https://github.com/huggingface/diffusers" target="_blank">🔧 Diffusers 库 — 读源码 + 训练</a></h3>
+      <p class="desc">Hugging Face 的 diffusers 是事实标准。读懂其中的 pipeline、scheduler、UNet/DiT 实现，对你理解整个体系至关重要。</p>
+      <div class="tags"><span>代码</span><span>动手</span><span>工程</span></div>
+    </div>
+
+  </div>
+</div>
+</section>
+
+<!-- PHASE 3: Video Generation -->
+<section id="phase3" class="phase-3">
+<div class="container">
+  <div class="section-header">
+    <span class="section-label">Phase 3 · 预计 6-8 周</span>
+    <h2>视频生成模型专项</h2>
+    <p>从图像到视频的跨越——时间维度建模、3D-VAE、视频 DiT</p>
+  </div>
+  <div class="card-grid">
+
+    <div class="card t-paper">
+      <span class="card-type">论文 ★★★</span>
+      <span class="difficulty diff-advanced">进阶</span>
+      <h3><a href="https://openai.com/index/video-generation-models-as-world-simulators/" target="_blank">Sora 技术报告 — Video as World Simulators</a></h3>
+      <p class="desc">OpenAI Sora 的技术思路。虽然没开源，但这篇报告奠定了「视频 patch → DiT → 世界模拟器」的范式。必读。</p>
+      <div class="tags"><span>Sora</span><span>范式定义</span><span>必读</span></div>
+    </div>
+
+    <div class="card t-repo">
+      <span class="card-type">开源模型 ★★★</span>
+      <span class="difficulty diff-advanced">进阶</span>
+      <h3><a href="https://github.com/Wan-Video/Wan2.1" target="_blank">Wan2.1 — 阿里万相视频大模型</a></h3>
+      <p class="desc">目前最强开源视频模型之一（1.3B / 14B）。DiT 架构 + Flow Matching + 3D-VAE。有完整训练/推理代码，是你实践的最佳起点。</p>
+      <div class="tags"><span>开源</span><span>DiT</span><span>必学</span><span>代码可用</span></div>
+    </div>
+
+    <div class="card t-repo">
+      <span class="card-type">开源模型</span>
+      <span class="difficulty diff-advanced">进阶</span>
+      <h3><a href="https://github.com/THUDM/CogVideo" target="_blank">CogVideoX — 智谱视频生成模型</a></h3>
+      <p class="desc">清华智谱出品，2B/5B 参数，完整的 3D-VAE + 3D 因果注意力 DiT。代码清晰，适合学习架构设计。</p>
+      <div class="tags"><span>开源</span><span>3D VAE</span><span>学习友好</span></div>
+    </div>
+
+    <div class="card t-repo">
+      <span class="card-type">开源模型</span>
+      <span class="difficulty diff-advanced">进阶</span>
+      <h3><a href="https://github.com/Tencent/HunyuanVideo" target="_blank">HunyuanVideo — 腾讯混元视频</a></h3>
+      <p class="desc">腾讯出品，13B 参数，Dual-Stream DiT 架构。大规模模型的参考实现，了解工业级视频模型的工程细节。</p>
+      <div class="tags"><span>开源</span><span>13B</span><span>工业级</span></div>
+    </div>
+
+    <div class="card t-paper">
+      <span class="card-type">论文</span>
+      <span class="difficulty diff-advanced">进阶</span>
+      <h3><a href="https://arxiv.org/abs/2311.15127" target="_blank">SVD — Stable Video Diffusion</a></h3>
+      <p class="desc">Stability AI 的视频扩散模型。基于图像模型扩展到视频的经典方案，理解时间层（Temporal Layers）的插入方式。</p>
+      <div class="tags"><span>SVD</span><span>时间建模</span><span>经典</span></div>
+    </div>
+
+    <div class="card t-paper">
+      <span class="card-type">论文</span>
+      <span class="difficulty diff-intermediate">中级</span>
+      <h3><a href="https://arxiv.org/abs/2307.04725" target="_blank">AnimateDiff — 为图像模型注入运动</a></h3>
+      <p class="desc">在冻结的图像扩散模型上训练运动模块。非常好的学习材料——理解如何从 2D 扩展到时间维度。</p>
+      <div class="tags"><span>运动建模</span><span>入门友好</span><span>实用</span></div>
+    </div>
+
+    <div class="card t-paper">
+      <span class="card-type">论文</span>
+      <span class="difficulty diff-advanced">进阶</span>
+      <h3><a href="https://arxiv.org/abs/2403.06764" target="_blank">SeedDance 技术报告</a></h3>
+      <p class="desc">字节跳动 SeedDance 的技术思路。了解工业级视频模型在舞蹈/人体动作生成上的技术方案。</p>
+      <div class="tags"><span>SeedDance</span><span>字节</span><span>人体运动</span></div>
+    </div>
+
+    <div class="card t-paper">
+      <span class="card-type">论文</span>
+      <span class="difficulty diff-advanced">进阶</span>
+      <h3><a href="https://arxiv.org/abs/2501.12243" target="_blank">Step-Video — 阶跃视频模型技术报告</a></h3>
+      <p class="desc">阶跃星辰出品，30B 参数。了解超大规模视频模型的训练策略（分阶段训练、数据课程学习）。</p>
+      <div class="tags"><span>30B</span><span>训练策略</span><span>数据工程</span></div>
+    </div>
+
+  </div>
+</div>
+</section>
+
+<!-- PHASE 4: Hands-on Training Practice -->
+<section id="phase4" class="phase-4">
+<div class="container">
+  <div class="section-header">
+    <span class="section-label">Phase 4 · 实战练习</span>
+    <h2>从实践中学习 — 动手训练路线</h2>
+    <p>理论学完了要落地。以下是从易到难的实操路线图。</p>
+  </div>
+
+  <div class="timeline">
+
+    <div class="tl-item">
+      <h4>Step 1：用 Diffusers 训练图像 DDPM</h4>
+      <div class="tl-time">⏱ 1-2 周 · GPU: 单卡 A100/4090</div>
+      <p>从 Hugging Face diffusers 的 training example 出发，在小数据集（CIFAR-10 / Pokemon）上训练一个简单的 DDPM。理解训练循环、噪声调度、采样过程。</p>
+      <div class="tl-links">
+        <a href="https://github.com/huggingface/diffusers/tree/main/examples/unconditional_image_generation" target="_blank">Diffusers 训练示例</a>
+        <a href="https://huggingface.co/learn/diffusion-course" target="_blank">配套课程</a>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <h4>Step 2：LoRA 微调 Stable Diffusion</h4>
+      <div class="tl-time">⏱ 1-2 周 · GPU: 单卡 24GB+</div>
+      <p>学会 LoRA（Low-Rank Adaptation）微调。在自己的数据集上训练人物/风格 LoRA。这是成本最低的个性化方式。</p>
+      <div class="tl-links">
+        <a href="https://github.com/huggingface/diffusers/tree/main/examples/dreambooth" target="_blank">DreamBooth LoRA</a>
+        <a href="https://huggingface.co/docs/diffusers/training/lora" target="_blank">LoRA 文档</a>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <h4>Step 3：AnimateDiff 运动模块训练</h4>
+      <div class="tl-time">⏱ 2-3 周 · GPU: 1-2 × A100</div>
+      <p>在冻结的图像模型上训练 Motion Module。理解时间注意力层如何工作、视频数据如何加载和处理。这是进入视频领域最友好的入口。</p>
+      <div class="tl-links">
+        <a href="https://github.com/guoyww/AnimateDiff" target="_blank">AnimateDiff 代码</a>
+        <a href="https://arxiv.org/abs/2307.04725" target="_blank">论文</a>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <h4>Step 4：微调 Wan2.1-1.3B / CogVideoX-2B</h4>
+      <div class="tl-time">⏱ 3-4 周 · GPU: 2-4 × A100 80GB</div>
+      <p>进入真正的视频大模型。选择小参数版本（Wan2.1 1.3B 或 CogVideoX 2B），在垂直领域数据上做 LoRA 微调或全参数微调。重点学习：视频数据处理流水线、3D-VAE 编码、分布式训练配置。</p>
+      <div class="tl-links">
+        <a href="https://github.com/Wan-Video/Wan2.1" target="_blank">Wan2.1 代码</a>
+        <a href="https://github.com/THUDM/CogVideo" target="_blank">CogVideoX 代码</a>
+        <a href="https://github.com/hpcaitech/Open-Sora" target="_blank">Open-Sora（训练框架参考）</a>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <h4>Step 5：训练自己的 3D-VAE</h4>
+      <div class="tl-time">⏱ 4-6 周 · GPU: 4-8 × A100</div>
+      <p>VAE 质量直接决定视频清晰度和时间一致性。参考 CogVideoX 和 Open-Sora-Plan 的 3D-VAE 实现，在视频数据上训练自己的 Video Tokenizer。</p>
+      <div class="tl-links">
+        <a href="https://github.com/PKU-YuanGroup/Open-Sora-Plan" target="_blank">Open-Sora-Plan（含 3D-VAE）</a>
+        <a href="https://github.com/THUDM/CogVideo/tree/main/tools/caption" target="_blank">视频标注工具</a>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <h4>Step 6：从头训练完整视频 DiT</h4>
+      <div class="tl-time">⏱ 8-16 周 · GPU: 8-64+ × H100/A100</div>
+      <p>终极目标：从头训练一个完整的视频 DiT 模型。需要大规模数据（百万级视频-文本对）、分布式训练基础设施、数据清洗和标注流水线。参考 Open-Sora 的训练框架。</p>
+      <div class="tl-links">
+        <a href="https://github.com/hpcaitech/Open-Sora" target="_blank">Open-Sora 训练框架</a>
+        <a href="https://github.com/NVlabs/VILA" target="_blank">视频理解参考</a>
+        <a href="https://github.com/microsoft/DeepSpeed" target="_blank">DeepSpeed 分布式</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+</section>
+
+<!-- PHASE 5: Commercial -->
+<section id="phase5" class="phase-5">
+<div class="container">
+  <div class="section-header">
+    <span class="section-label">Phase 5 · 商用化</span>
+    <h2>从研究到商用产品</h2>
+    <p>达到 SeedDance 2.0 级别不仅是模型问题，还需要工程、数据、产品全链路能力。</p>
+  </div>
+  <div class="card-grid">
+
+    <div class="card t-tool">
+      <span class="card-type">工程</span>
+      <h3>模型推理加速</h3>
+      <p class="desc">商用的核心是成本和延迟。需要掌握：模型量化（INT8/FP8）、KV Cache 优化、投机采样、TensorRT / vLLM 推理部署、分步蒸馏（减少去噪步数）。</p>
+      <div class="tags"><span>量化</span><span>推理优化</span><span>TensorRT</span></div>
+    </div>
+
+    <div class="card t-tool">
+      <span class="card-type">数据</span>
+      <h3>视频数据飞轮</h3>
+      <p class="desc">数据决定上限。需要构建：视频爬取/清洗流水线、自动标注系统（用 VLM 生成 caption）、数据质量评估、数据去重、美学评分过滤。百万到千万级视频-文本对。</p>
+      <div class="tags"><span>数据工程</span><span>标注</span><span>清洗</span></div>
+    </div>
+
+    <div class="card t-tool">
+      <span class="card-type">产品</span>
+      <h3>可控性：ControlNet + IP-Adapter</h3>
+      <p class="desc">商用需要精确控制。用户需要控制人物身份、动作、镜头、风格。训练 ControlNet、IP-Adapter、Reference-Net 等控制模块。</p>
+      <div class="tags"><span>可控生成</span><span>产品化</span><span>重要</span></div>
+    </div>
+
+    <div class="card t-tool">
+      <span class="card-type">安全</span>
+      <h3>内容安全 + 合规</h3>
+      <p class="desc">商用必须解决：NSFW 检测、人脸伪造检测、版权内容过滤、水印嵌入（C2PA 标准）、区域合规（GDPR、国内法规）。</p>
+      <div class="tags"><span>安全</span><span>合规</span><span>水印</span></div>
+    </div>
+
+    <div class="card t-repo">
+      <span class="card-type">参考项目</span>
+      <h3><a href="https://github.com/hpcaitech/Open-Sora" target="_blank">Open-Sora — 完整训练框架</a></h3>
+      <p class="desc">Colossal-AI 团队的开源 Sora 复现项目。包含完整的数据处理、分布式训练、推理流水线。最接近商用级别的开源参考。</p>
+      <div class="tags"><span>训练框架</span><span>端到端</span><span>参考实现</span></div>
+    </div>
+
+    <div class="card t-repo">
+      <span class="card-type">参考项目</span>
+      <h3><a href="https://github.com/PKU-YuanGroup/Open-Sora-Plan" target="_blank">Open-Sora-Plan — 北大开源计划</a></h3>
+      <p class="desc">北大团队主导，包含 3D-VAE 训练代码、视频 DiT 训练、多分辨率训练策略。训练流水线设计清晰。</p>
+      <div class="tags"><span>完整流水线</span><span>3D-VAE</span><span>训练代码</span></div>
+    </div>
+
+  </div>
+</div>
+</section>
+
+<!-- CORE CONCEPTS -->
+<section id="concepts" style="background: rgba(255,255,255,0.01);">
+<div class="container">
+  <div class="section-header">
+    <h2 style="color: var(--accent-2);">🧩 核心概念速查（点击展开）</h2>
+    <p>遇到不懂的概念？这里帮你快速理解。</p>
+  </div>
+  <div class="concept-grid">
+
+    <div class="concept-card" onclick="this.classList.toggle('open')">
+      <h4>Diffusion Model（扩散模型）</h4>
+      <p class="concept-brief">通过逐步加噪然后学会去噪来生成数据的模型。</p>
+      <p class="expand-hint">↓ 点击展开详情</p>
+      <div class="concept-detail">
+        <strong>前向过程</strong>：把一张干净图片逐步加高斯噪声，直到变成纯噪声（大约 1000 步）。<br><br>
+        <strong>反向过程</strong>：训练一个神经网络，学会在每一步预测并去除噪声。推理时从纯噪声开始，逐步去噪就能生成新图片。<br><br>
+        <strong>数学核心</strong>：损失函数 = 预测噪声与真实噪声的 MSE。非常简单但极其有效。<br><br>
+        <strong>为什么强</strong>：比 GAN 稳定，比 VAE 质量高，可以自然引入各种条件控制。
+      </div>
+    </div>
+
+    <div class="concept-card" onclick="this.classList.toggle('open')">
+      <h4>DiT（Diffusion Transformer）</h4>
+      <p class="concept-brief">用 Transformer 替代 U-Net 作为扩散模型的去噪骨干。</p>
+      <p class="expand-hint">↓ 点击展开详情</p>
+      <div class="concept-detail">
+        传统扩散模型用 U-Net（下采样 → 上采样 + skip connection），DiT 直接把图像/视频分成 patch，展平成 token 序列，用标准 Transformer 处理。<br><br>
+        <strong>优势</strong>：Transformer 的 scaling law 更好，参数越大效果越好；全局注意力捕捉长程依赖。<br><br>
+        <strong>时间步编码</strong>：使用 AdaLN-Zero（自适应层归一化），根据时间步 t 动态调整每层的 scale 和 shift。<br><br>
+        <strong>在视频模型中</strong>：输入 token = 空间 patch × 时间帧数，全注意力或时空分离注意力。
+      </div>
+    </div>
+
+    <div class="concept-card" onclick="this.classList.toggle('open')">
+      <h4>3D-VAE（视频变分自编码器）</h4>
+      <p class="concept-brief">将视频从像素空间压缩到低维潜空间的编解码器。</p>
+      <p class="expand-hint">↓ 点击展开详情</p>
+      <div class="concept-detail">
+        视频的原始数据量巨大（比如 720p × 30fps × 5s = 上亿像素）。直接在像素空间做扩散不现实。<br><br>
+        <strong>3D-VAE 干什么</strong>：同时在空间（宽高）和时间（帧数）维度做压缩。比如 8×8 空间 + 4× 时间压缩，数据量缩小 256 倍。<br><br>
+        <strong>CausalConv3D</strong>：因果 3D 卷积，确保编码第 N 帧时只看前面的帧，保证时序一致性。<br><br>
+        <strong>关键指标</strong>：重建质量（PSNR/SSIM）、时间一致性（无闪烁）、压缩比。
+      </div>
+    </div>
+
+    <div class="concept-card" onclick="this.classList.toggle('open')">
+      <h4>Flow Matching / Rectified Flow</h4>
+      <p class="concept-brief">比 DDPM 更高效的新一代扩散训练范式。</p>
+      <p class="expand-hint">↓ 点击展开详情</p>
+      <div class="concept-detail">
+        DDPM 的前向过程是随机的（加随机噪声），采样也需要很多步。<br><br>
+        <strong>Flow Matching</strong>：学习一个从噪声到数据的确定性流场（ODE），训练时直接学习速度场。<br><br>
+        <strong>Rectified Flow</strong>：进一步让流场尽量是直线路径（最短路径），这样采样时只需要很少的步数（5-25步 vs DDPM 的 50-1000 步）。<br><br>
+        <strong>实际好处</strong>：训练更稳定、采样更快、推理成本更低。Wan2.1、SD3 等新模型都用了这个。
+      </div>
+    </div>
+
+    <div class="concept-card" onclick="this.classList.toggle('open')">
+      <h4>LoRA（Low-Rank Adaptation）</h4>
+      <p class="concept-brief">用极少量参数微调大模型的技术，显存和数据需求大幅降低。</p>
+      <p class="expand-hint">↓ 点击展开详情</p>
+      <div class="concept-detail">
+        大模型全参数微调需要巨大显存。LoRA 的核心思路：权重变化量 ΔW 可以分解为两个低秩矩阵 A × B。<br><br>
+        <strong>举例</strong>：一个 4096×4096 的矩阵有 1600 万参数，用 rank=64 的 LoRA 只需 4096×64 + 64×4096 = 52 万参数（仅 3%）。<br><br>
+        <strong>在视频模型中</strong>：常用来微调特定风格、人物、动作类型。是商用化个性定制的关键技术。
+      </div>
+    </div>
+
+    <div class="concept-card" onclick="this.classList.toggle('open')">
+      <h4>Classifier-Free Guidance (CFG)</h4>
+      <p class="concept-brief">让生成结果更忠实于文本提示的技巧。</p>
+      <p class="expand-hint">↓ 点击展开详情</p>
+      <div class="concept-detail">
+        训练时随机丢弃文本条件（比如 10% 概率用空 prompt）。推理时同时做有条件和无条件预测：<br><br>
+        <code>输出 = 无条件预测 + guidance_scale × (有条件预测 - 无条件预测)</code><br><br>
+        guidance_scale 越大，生成越忠实于文本但多样性越低。通常设 7.5-12.5。<br><br>
+        这是一个非常简单但效果显著的技巧，几乎所有扩散模型都用。
+      </div>
+    </div>
+
+    <div class="concept-card" onclick="this.classList.toggle('open')">
+      <h4>Attention（注意力机制）</h4>
+      <p class="concept-brief">让模型关注输入中最相关部分的核心机制。</p>
+      <p class="expand-hint">↓ 点击展开详情</p>
+      <div class="concept-detail">
+        <strong>Self-Attention</strong>：Q、K、V 来自同一输入。视频模型中用来建模空间（像素间关系）和时间（帧间关系）依赖。<br><br>
+        <strong>Cross-Attention</strong>：Q 来自图像/视频特征，K/V 来自文本 embedding。这是「文本控制生成」的核心机制。<br><br>
+        <strong>在视频 DiT 中的变体</strong>：全时空注意力（Full Spatiotemporal）、时空分离注意力（先 Spatial-Attn 再 Temporal-Attn）。前者效果好但计算量大。
+      </div>
+    </div>
+
+    <div class="concept-card" onclick="this.classList.toggle('open')">
+      <h4>分布式训练（DeepSpeed / FSDP）</h4>
+      <p class="concept-brief">多 GPU/多节点训练大模型的工程基础。</p>
+      <p class="expand-hint">↓ 点击展开详情</p>
+      <div class="concept-detail">
+        视频模型参数量 1B-30B+，单卡放不下。需要分布式训练：<br><br>
+        <strong>数据并行</strong>：每卡一份模型，不同数据。最简单。<br>
+        <strong>ZeRO</strong>（DeepSpeed）：把优化器状态、梯度、参数分片存储在不同 GPU 上。ZeRO-1/2/3 分别分片不同内容。<br>
+        <strong>FSDP</strong>（PyTorch 原生）：类似 ZeRO-3，完全分片数据并行。<br>
+        <strong>张量并行</strong>：把单个矩阵乘法拆分到多卡（Megatron-LM 风格）。<br>
+        <strong>梯度检查点</strong>：用时间换空间，推理时重算中间结果而不存储，显存可节省 60%+。
+      </div>
+    </div>
+
+  </div>
+</div>
+</section>
+
+<!-- HARDWARE GUIDE -->
+<section id="hardware">
+<div class="container">
+  <div class="section-header">
+    <h2 style="color: var(--accent-5);">💻 硬件 & 算力指南</h2>
+    <p>不同阶段需要的硬件配置参考</p>
+  </div>
+  <div style="overflow-x: auto;">
+  <table class="hw-table">
+    <thead>
+      <tr>
+        <th>阶段</th>
+        <th>任务</th>
+        <th>最低 GPU</th>
+        <th>推荐配置</th>
+        <th>预算参考（云）</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Phase 0-1</td>
+        <td>学习、跑教程</td>
+        <td>RTX 3060 12GB</td>
+        <td>RTX 4090 24GB</td>
+        <td>按需租用，$0.3-1/h</td>
+      </tr>
+      <tr>
+        <td>Phase 2</td>
+        <td>图像扩散训练</td>
+        <td>RTX 4090 24GB</td>
+        <td>1× A100 80GB</td>
+        <td>$1-2/h</td>
+      </tr>
+      <tr>
+        <td>Phase 4 Step 1-3</td>
+        <td>LoRA / AnimateDiff</td>
+        <td>1× A100 40GB</td>
+        <td>2× A100 80GB</td>
+        <td>$2-5/h</td>
+      </tr>
+      <tr>
+        <td>Phase 4 Step 4</td>
+        <td>微调视频 1-2B 模型</td>
+        <td>2× A100 80GB</td>
+        <td>4× A100 80GB</td>
+        <td>$5-10/h</td>
+      </tr>
+      <tr>
+        <td>Phase 4 Step 5-6</td>
+        <td>训练 VAE / 全模型</td>
+        <td>8× A100 80GB</td>
+        <td>8-64× H100</td>
+        <td>$20-100+/h</td>
+      </tr>
+      <tr>
+        <td>商用级训练</td>
+        <td>SeedDance 级别</td>
+        <td>64× H100</td>
+        <td>256-1000× H100</td>
+        <td>$100K-1M+ 总计</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+  <div style="margin-top: 30px;">
+    <div class="km-item">
+      <h4>☁️ 推荐云 GPU 平台</h4>
+      <ul>
+        <li><a href="https://www.autodl.com" target="_blank" style="color:var(--accent-6);text-decoration:none;">AutoDL</a> — 国内最便宜的 GPU 云，A100 约 ¥3-5/h</li>
+        <li><a href="https://featurize.cn" target="_blank" style="color:var(--accent-6);text-decoration:none;">Featurize</a> — 国内 GPU 租用平台，灵活</li>
+        <li><a href="https://www.gpushare.com" target="_blank" style="color:var(--accent-6);text-decoration:none;">恒源云</a> — 国内 GPU 共享平台</li>
+        <li><a href="https://lambdalabs.com" target="_blank" style="color:var(--accent-6);text-decoration:none;">Lambda Labs</a> — 海外性价比高，H100 $2-3/h</li>
+        <li><a href="https://vast.ai" target="_blank" style="color:var(--accent-6);text-decoration:none;">Vast.ai</a> — 海外社区 GPU 市场，价格最低</li>
+        <li><a href="https://www.runpod.io" target="_blank" style="color:var(--accent-6);text-decoration:none;">RunPod</a> — 海外按需 GPU，A100 约 $1.5/h</li>
+      </ul>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- READING LIST / PAPERS -->
+<section style="background: rgba(255,255,255,0.01);">
+<div class="container">
+  <div class="section-header">
+    <h2 style="color: var(--accent-1);">📚 必读论文清单（按优先级排序）</h2>
+    <p>这些论文构成了视频大模型的知识体系。建议按顺序阅读。</p>
+  </div>
+  <div style="display: flex; flex-direction: column; gap: 12px;">
+
+    <div class="km-item" style="display:flex; align-items:flex-start; gap:16px;">
+      <span style="color:var(--accent-1);font-family:'JetBrains Mono';font-size:0.8rem;min-width:30px;">01</span>
+      <div>
+        <a href="https://arxiv.org/abs/2006.11239" target="_blank" style="color:var(--text);text-decoration:none;font-weight:700;">DDPM (2020)</a>
+        <span style="color:var(--text-dim);font-size:0.84rem;"> — 扩散模型奠基，必须理解的第一篇</span>
+      </div>
+    </div>
+
+    <div class="km-item" style="display:flex; align-items:flex-start; gap:16px;">
+      <span style="color:var(--accent-1);font-family:'JetBrains Mono';font-size:0.8rem;min-width:30px;">02</span>
+      <div>
+        <a href="https://arxiv.org/abs/2112.10752" target="_blank" style="color:var(--text);text-decoration:none;font-weight:700;">Latent Diffusion Models (2022)</a>
+        <span style="color:var(--text-dim);font-size:0.84rem;"> — 潜空间扩散，Stable Diffusion 基础</span>
+      </div>
+    </div>
+
+    <div class="km-item" style="display:flex; align-items:flex-start; gap:16px;">
+      <span style="color:var(--accent-1);font-family:'JetBrains Mono';font-size:0.8rem;min-width:30px;">03</span>
+      <div>
+        <a href="https://arxiv.org/abs/2212.09748" target="_blank" style="color:var(--text);text-decoration:none;font-weight:700;">DiT (2023)</a>
+        <span style="color:var(--text-dim);font-size:0.84rem;"> — Transformer 替代 U-Net，现代视频模型的架构基础</span>
+      </div>
+    </div>
+
+    <div class="km-item" style="display:flex; align-items:flex-start; gap:16px;">
+      <span style="color:var(--accent-1);font-family:'JetBrains Mono';font-size:0.8rem;min-width:30px;">04</span>
+      <div>
+        <a href="https://arxiv.org/abs/2210.02747" target="_blank" style="color:var(--text);text-decoration:none;font-weight:700;">Flow Matching (2023)</a>
+        <span style="color:var(--text-dim);font-size:0.84rem;"> — 新一代训练范式，理解 Rectified Flow</span>
+      </div>
+    </div>
+
+    <div class="km-item" style="display:flex; align-items:flex-start; gap:16px;">
+      <span style="color:var(--accent-1);font-family:'JetBrains Mono';font-size:0.8rem;min-width:30px;">05</span>
+      <div>
+        <a href="https://openai.com/index/video-generation-models-as-world-simulators/" target="_blank" style="color:var(--text);text-decoration:none;font-weight:700;">Sora 技术报告 (2024)</a>
+        <span style="color:var(--text-dim);font-size:0.84rem;"> — 视频作为世界模拟器的范式</span>
+      </div>
+    </div>
+
+    <div class="km-item" style="display:flex; align-items:flex-start; gap:16px;">
+      <span style="color:var(--accent-1);font-family:'JetBrains Mono';font-size:0.8rem;min-width:30px;">06</span>
+      <div>
+        <a href="https://arxiv.org/abs/2307.04725" target="_blank" style="color:var(--text);text-decoration:none;font-weight:700;">AnimateDiff (2023)</a>
+        <span style="color:var(--text-dim);font-size:0.84rem;"> — 从图像到视频的桥梁，理解时间建模</span>
+      </div>
+    </div>
+
+    <div class="km-item" style="display:flex; align-items:flex-start; gap:16px;">
+      <span style="color:var(--accent-1);font-family:'JetBrains Mono';font-size:0.8rem;min-width:30px;">07</span>
+      <div>
+        <a href="https://arxiv.org/abs/2311.15127" target="_blank" style="color:var(--text);text-decoration:none;font-weight:700;">Stable Video Diffusion (2023)</a>
+        <span style="color:var(--text-dim);font-size:0.84rem;"> — 图像模型扩展到视频的经典方案</span>
+      </div>
+    </div>
+
+    <div class="km-item" style="display:flex; align-items:flex-start; gap:16px;">
+      <span style="color:var(--accent-1);font-family:'JetBrains Mono';font-size:0.8rem;min-width:30px;">08</span>
+      <div>
+        <a href="https://github.com/Wan-Video/Wan2.1" target="_blank" style="color:var(--text);text-decoration:none;font-weight:700;">Wan2.1 技术文档 (2025)</a>
+        <span style="color:var(--text-dim);font-size:0.84rem;"> — 最强开源视频模型，深入研读代码和文档</span>
+      </div>
+    </div>
+
+    <div class="km-item" style="display:flex; align-items:flex-start; gap:16px;">
+      <span style="color:var(--accent-1);font-family:'JetBrains Mono';font-size:0.8rem;min-width:30px;">09</span>
+      <div>
+        <a href="https://github.com/THUDM/CogVideo" target="_blank" style="color:var(--text);text-decoration:none;font-weight:700;">CogVideoX 技术报告 (2024)</a>
+        <span style="color:var(--text-dim);font-size:0.84rem;"> — 3D-VAE + DiT 的清晰实现参考</span>
+      </div>
+    </div>
+
+    <div class="km-item" style="display:flex; align-items:flex-start; gap:16px;">
+      <span style="color:var(--accent-1);font-family:'JetBrains Mono';font-size:0.8rem;min-width:30px;">10</span>
+      <div>
+        <a href="https://arxiv.org/abs/2106.09685" target="_blank" style="color:var(--text);text-decoration:none;font-weight:700;">LoRA (2021)</a>
+        <span style="color:var(--text-dim);font-size:0.84rem;"> — 低秩微调，商用化个性定制的基础</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+</section>
+
+<!-- EXTRA TOOLS & RESOURCES -->
+<section>
+<div class="container">
+  <div class="section-header">
+    <h2 style="color: var(--accent-3);">🛠️ 日常工具 & 社区</h2>
+    <p>保持学习和跟踪前沿的工具</p>
+  </div>
+  <div class="card-grid">
+
+    <div class="card t-tool">
+      <span class="card-type">工具</span>
+      <h3><a href="https://huggingface.co" target="_blank">Hugging Face</a></h3>
+      <p class="desc">模型仓库、数据集、Spaces demo。所有开源视频模型都在这里发布权重。必须熟练使用。</p>
+    </div>
+
+    <div class="card t-tool">
+      <span class="card-type">工具</span>
+      <h3><a href="https://wandb.ai" target="_blank">Weights & Biases (W&B)</a></h3>
+      <p class="desc">训练实验追踪、可视化 loss 曲线、超参搜索。训练大模型必备。</p>
+    </div>
+
+    <div class="card t-tool">
+      <span class="card-type">工具</span>
+      <h3><a href="https://paperswithcode.com" target="_blank">Papers with Code</a></h3>
+      <p class="desc">论文 + 代码 + 榜单。追踪视频生成领域的 SOTA 和最新论文。</p>
+    </div>
+
+    <div class="card t-tool">
+      <span class="card-type">社区</span>
+      <h3><a href="https://github.com/showlab/Awesome-Video-Diffusion" target="_blank">Awesome Video Diffusion</a></h3>
+      <p class="desc">GitHub 上最全的视频扩散模型论文和项目列表，持续更新。</p>
+    </div>
+
+    <div class="card t-tool">
+      <span class="card-type">社区</span>
+      <h3><a href="https://www.reddit.com/r/StableDiffusion/" target="_blank">r/StableDiffusion</a></h3>
+      <p class="desc">Reddit 上最活跃的 AI 生成社区，经常有技术讨论和最新动态。</p>
+    </div>
+
+    <div class="card t-tool">
+      <span class="card-type">社区</span>
+      <h3><a href="https://arxiv.org/list/cs.CV/recent" target="_blank">arXiv CS.CV</a></h3>
+      <p class="desc">每天刷一下计算机视觉最新论文，保持对前沿的感知。</p>
+    </div>
+
+  </div>
+</div>
+</section>
+
+<footer>
+  <p>Chenglong 的视频大模型学习计划 · 整理于 2026 年 3 月</p>
+  <p style="margin-top:8px;">预计完整学习周期：6-12 个月（全职）· 从小白到能独立训练视频生成模型</p>
+</footer>
+
+<script>
+// Smooth scroll for nav
+document.querySelectorAll('.nav-bar a').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+</script>
+</body>
+</html>
