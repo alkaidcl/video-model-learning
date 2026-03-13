@@ -4,7 +4,7 @@
 
 ## 🌐 在线访问
 
-**GitHub Pages**: 部署后访问 `https://你的用户名.github.io/video-model-learning/`
+**GitHub Pages**: https://alkaidcl.github.io/video-model-learning/
 
 ## 📋 内容概览
 
@@ -20,10 +20,11 @@
 ## 🔗 核心资源速查
 
 ### 开源视频模型
-- [Wan2.1](https://github.com/Wan-Video/Wan2.1) — 阿里万相，当前最强开源视频模型
+- [Wan2.1/2.2](https://github.com/Wan-Video/Wan2.1) — 阿里万相，当前最强开源视频模型
+- [HunyuanVideo 1.5](https://github.com/Tencent/HunyuanVideo) — 腾讯混元，8.3B 消费级可跑
+- [Helios](https://arxiv.org/abs/2603.04379) — 北大，实时长视频生成（2026.3）
+- [Open-Sora 2.0](https://github.com/hpcaitech/Open-Sora) — 11B 模型，$200K 训练成本
 - [CogVideoX](https://github.com/THUDM/CogVideo) — 清华智谱，代码清晰适合学习
-- [HunyuanVideo](https://github.com/Tencent/HunyuanVideo) — 腾讯混元，13B 工业级参考
-- [Open-Sora](https://github.com/hpcaitech/Open-Sora) — 完整训练框架
 
 ### 必学课程
 - [Hugging Face Diffusion Course](https://huggingface.co/learn/diffusion-course) — 扩散模型最佳入门
@@ -41,7 +42,7 @@
 ## 🚀 快速部署
 
 ```bash
-git clone https://github.com/你的用户名/video-model-learning.git
+git clone https://github.com/alkaidcl/video-model-learning.git
 cd video-model-learning
 # 开启 GitHub Pages: Settings → Pages → Source: main branch
 ```

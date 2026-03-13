@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>视频大模型学习导航：从 0 到可商用的训练路线</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #121a30;
+      --panel-2: #182443;
+      --text: #eef3ff;
+      --muted: #b7c3e0;
+      --accent: #7cc4ff;
+      --accent-2: #91f2c5;
+      --line: rgba(255,255,255,.09);
+      --shadow: 0 16px 40px rgba(0,0,0,.35);
+      --radius: 18px;
+      --max: 1180px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background:
+        radial-gradient(900px 500px at 10% -10%, rgba(124,196,255,.18), transparent 60%),
+        radial-gradient(700px 400px at 100% 0%, rgba(145,242,197,.12), transparent 55%),
+        linear-gradient(180deg, #09101e, #0b1020 30%, #0a1121 100%);
+      color: var(--text);
+      line-height: 1.65;
+    }
+    a { color: inherit; text-decoration: none; }
+    .wrap { width: min(var(--max), calc(100% - 32px)); margin: 0 auto; }
+    .hero {
+      padding: 52px 0 28px;
+    }
+    .hero-box {
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 32px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+    .eyebrow {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(124,196,255,.35);
+      color: var(--accent);
+      font-size: 13px;
+      letter-spacing: .03em;
+      margin-bottom: 14px;
+      background: rgba(124,196,255,.08);
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(28px, 5vw, 48px);
+      line-height: 1.15;
+    }
+    .lead {
+      color: var(--muted);
+      font-size: 17px;
+      max-width: 920px;
+      margin: 0 0 20px;
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.4fr .9fr;
+      gap: 18px;
+      margin-top: 24px;
+    }
+    .stat-box, .note-box {
+      background: rgba(255,255,255,.03);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px 18px 16px;
+    }
+    .stat-box h3, .note-box h3 {
+      margin: 0 0 8px;
+      font-size: 16px;
+    }
+    .stat-box p, .note-box p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--line);
+      background: rgba(10,17,33,.76);
+    }
+    .nav-inner {
+      width: min(var(--max), calc(100% - 32px));
+      margin: 0 auto;
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 10px 0;
+      scrollbar-width: none;
+    }
+    .nav-inner::-webkit-scrollbar { display: none; }
+    .nav a {
+      white-space: nowrap;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      background: rgba(255,255,255,.03);
+      font-size: 14px;
+    }
+    .nav a:hover { color: var(--text); border-color: rgba(124,196,255,.35); }
+    main section.anchor {
+      padding: 42px 0 8px;
+    }
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .section-head h2 {
+      margin: 0;
+      font-size: clamp(24px, 3vw, 34px);
+      line-height: 1.2;
+    }
+    .section-head p {
+      margin: 0;
+      color: var(--muted);
+      max-width: 760px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .grid.two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .card {
+      display: block;
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+      transition: transform .18s ease, border-color .18s ease, background .18s ease;
+      min-height: 180px;
+    }
+    .card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(124,196,255,.38);
+      background: linear-gradient(180deg, rgba(124,196,255,.08), rgba(255,255,255,.03));
+    }
+    .card-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .card-body {
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .card-tags {
+      margin-top: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      border: 1px solid rgba(255,255,255,.12);
+      color: #d6e3ff;
+      background: rgba(255,255,255,.03);
+    }
+    .meta {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .knowledge-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 16px;
+    }
+    .knowledge-card, .phase, .project-card, .callout, .table-wrap {
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+    .knowledge-card h3, .phase h3, .project-card h3 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+    .knowledge-card ul, .phase ul {
+      margin: 0;
+      padding-left: 20px;
+      color: var(--muted);
+    }
+    .phase-goal {
+      margin: 0 0 10px;
+      color: #d6e3ff;
+    }
+    .callout {
+      margin-top: 14px;
+      padding: 18px 20px;
+      border-left: 4px solid var(--accent);
+    }
+    .callout strong { color: var(--accent-2); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      font-size: 14px;
+    }
+    th, td {
+      padding: 13px 12px;
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid var(--line);
+    }
+    th {
+      color: var(--accent);
+      font-weight: 700;
+      background: rgba(255,255,255,.03);
+    }
+    tr:last-child td { border-bottom: 0; }
+    .footer {
+      padding: 44px 0 60px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .small {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    @media (max-width: 980px) {
+      .hero-grid, .grid, .grid.two, .knowledge-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="wrap">
+      <div class="hero-box">
+        <div class="eyebrow">从小白到可商用视频大模型 · 学习导航</div>
+        <h1>视频大模型学习导航：从 0 到可商用的训练路线</h1>
+        <p class="lead">
+          这不是“论文堆砌页”，而是一张真正能落地的路线图：先学什么、为什么要学、从哪个开源模型开始训练、
+          哪些 license 更适合以后商用、什么时候该学系统工程与合规。我按“零基础 → 能训练 LoRA → 能做商用原型 → 再逼近 Seedance 2.0 思路”的顺序整理好了。
+        </p>
+
+        <div class="hero-grid">
+          <div class="stat-box">
+            <h3>我给你的核心建议</h3>
+            <p>不要一上来就想从零预训练一个 Seedance 级别模型。正确路线是：<strong>基础 → 图像扩散 → 视频推理 → 视频 LoRA → 数据管线 → 评测 → 商用化原型 → 更大规模训练</strong>。</p>
+          </div>
+          <div class="note-box">
+            <h3>推荐起步栈</h3>
+            <p><strong>Python + PyTorch + Diffusers + Wan2.1/2.2 + Finetrainers + VBench + xDiT</strong></p>
+          </div>
+        </div>
+
+        <div class="callout">
+          <strong>先记住一句话：</strong>
+          你真正要学的不是“某个模型名”，而是
+          <strong>数据、扩散/DiT、多模态条件控制、训练系统、评测、商用治理</strong>这 6 个大模块。
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="#what">你要学什么</a>
+      <a href="#start">我建议你先从哪开始</a>
+      <a href="#courses">课程与文档</a>
+      <a href="#models">开源模型</a>
+      <a href="#roadmap">实践路线</a>
+      <a href="#projects">建议项目</a>
+      <a href="#license">商用 License</a>
+      <a href="#papers">论文与评测</a>
+      <a href="#compliance">合规与数据</a>
+    </div>
+  </nav>
+
+  <main class="wrap">
+    <section id="what" class="anchor">
+      <div class="section-head">
+        <div>
+          <h2>你要学会的知识点</h2>
+          <p>这 8 组知识点，几乎对应了你将来做“商用级视频大模型”的完整能力地图。</p>
+        </div>
+      </div>
+      <div class="knowledge-grid">
+        
+        <section class="knowledge-card">
+            <h3>1. 深度学习与训练基础</h3>
+            <ul><li>张量、自动求导、反向传播、优化器、学习率、正则化、训练/验证/测试集</li><li>过拟合、数据泄漏、loss 曲线诊断、混合精度训练、checkpoint 与 resume</li><li>为什么大模型训练不是“调几个参数”而是“数据 + 目标函数 + 系统工程”的联动</li></ul>
+        </section>
+        
+
+        <section class="knowledge-card">
+            <h3>2. Transformer / Attention / Token 化</h3>
+            <ul><li>Self-Attention、Cross-Attention、KV cache、位置编码</li><li>文本 token、图像 patch、视频 latent token 的共同抽象</li><li>为什么视频模型几乎都在走向 DiT（Diffusion Transformer）</li></ul>
+        </section>
+        
+
+        <section class="knowledge-card">
+            <h3>3. 扩散模型与生成建模</h3>
+            <ul><li>前向加噪、反向去噪、scheduler、CFG、latent diffusion</li><li>UNet 与 DiT 的差异、Rectified Flow / Flow Matching 的思想</li><li>为什么视频生成常先在 latent space 中做，再解码成视频</li></ul>
+        </section>
+        
+
+        <section class="knowledge-card">
+            <h3>4. 视频生成专属知识</h3>
+            <ul><li>帧率、时长、分辨率、镜头运动、主体一致性、时间一致性</li><li>3D / causal VAE、temporal attention、时空联合建模</li><li>关键帧、I2V、TI2V、视频编辑、音频驱动视频、角色动画</li></ul>
+        </section>
+        
+
+        <section class="knowledge-card">
+            <h3>5. 多模态控制与数据</h3>
+            <ul><li>文本、图片、音频、视频参考条件如何注入到模型</li><li>数据清洗、去重、切镜头、重打标签（recaption）、质量过滤</li><li>训练集里最重要的不是‘量’，而是‘可学性、清晰度、标签质量、版权可用性’</li></ul>
+        </section>
+        
+
+        <section class="knowledge-card">
+            <h3>6. 训练系统与基础设施</h3>
+            <ul><li>FSDP、ZeRO、gradient checkpointing、FlashAttention、FP8 / BF16</li><li>吞吐量、显存、I/O、分布式 checkpoint、集群调度</li><li>为什么 DiT 商用部署最终会走到 xDiT 这类推理并行引擎</li></ul>
+        </section>
+        
+
+        <section class="knowledge-card">
+            <h3>7. 评测与对齐</h3>
+            <ul><li>主观评测 + 自动评测都要做，不能只看 demo</li><li>VBench / VBench-2.0 / Video-Bench 这类指标和维度怎么理解</li><li>固定提示词集、失败案例库、A/B 测试、人工评审表</li></ul>
+        </section>
+        
+
+        <section class="knowledge-card">
+            <h3>8. 商用与合规</h3>
+            <ul><li>模型 license、数据 license、人物肖像/商标/IP 风险</li><li>内容审核、滥用防护、来源标记（C2PA / Content Credentials）</li><li>计费、排队、缓存、失败重试、SLA、GPU 成本核算</li></ul>
+        </section>
+        
+      </div>
+    </section>
+
+    <section id="start" class="anchor">
+      <div class="section-head">
+        <div>
+          <h2>我建议你先从哪里开始</h2>
+          <p>如果你现在是这个领域的小白，我不建议你直接碰最大的模型和最复杂的训练框架。</p>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>场景</th>
+              <th>我的建议</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>第一选择（最适合你现在开始）</td><td>Wan2.1 → Wan2.2</td></tr>
+<tr><td>训练学习路线</td><td>Wan / CogVideoX / Finetrainers / Diffusers</td></tr>
+<tr><td>音视频联合进阶</td><td>LTX-2、Wan2.2-S2V</td></tr>
+<tr><td>工业级系统研究</td><td>HunyuanVideo + xDiT + FSDP2 + ZeRO</td></tr>
+<tr><td>最终目标的思路</td><td>统一多模态条件控制 + 高质量数据 + 强评测 + 可商用治理</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout">
+        <strong>一句话版路线：</strong>
+        先用 <strong>Wan2.1</strong> 把视频生成和 Diffusers 工程跑熟，再用 <strong>Wan / CogVideoX / Mochi / LTX-2</strong>
+        去做 LoRA 与更复杂的多模态控制，最后再进入 <strong>数据治理、评测、推理加速、商业化合规</strong>。
+      </div>
+    </section>
+
+    <section id="courses" class="anchor">
+      <div class="section-head">
+        <div>
+          <h2>课程与文档（按推荐顺序）</h2>
+          <p>先修基础，再修 Transformer，再修 diffusion，再进视频。</p>
+        </div>
+      </div>
+      <div class="grid">
+        
+        <a class="card" href="https://learn.deeplearning.ai/specializations/machine-learning/information" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">Machine Learning Specialization</div>
+            <div class="card-body">零基础机器学习入门。先把监督学习、损失函数、优化、过拟合、验证集这些概念打牢。</div>
+            
+            <div class="card-tags"><span class="tag">基础</span><span class="tag">必学</span><span class="tag">课程</span></div>
+        </a>
+        
+
+        <a class="card" href="https://docs.pytorch.org/tutorials/index.html" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">PyTorch Tutorials</div>
+            <div class="card-body">你后面训练视频模型时，99% 会用 PyTorch。先把 Dataset、DataLoader、autograd、mixed precision、distributed 这些工具学会。</div>
+            
+            <div class="card-tags"><span class="tag">基础</span><span class="tag">必学</span><span class="tag">文档</span></div>
+        </a>
+        
+
+        <a class="card" href="https://cs231n.stanford.edu/" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">CS231n (Stanford)</div>
+            <div class="card-body">补计算机视觉底层：卷积、视觉表征、训练套路、常见视觉任务。</div>
+            
+            <div class="card-tags"><span class="tag">视觉</span><span class="tag">建议</span><span class="tag">课程</span></div>
+        </a>
+        
+
+        <a class="card" href="https://karpathy.ai/zero-to-hero.html" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">Neural Networks: Zero to Hero</div>
+            <div class="card-body">把反向传播、神经网络和训练过程真正“吃透”，非常适合小白建立手感。</div>
+            
+            <div class="card-tags"><span class="tag">基础</span><span class="tag">必学</span><span class="tag">课程</span></div>
+        </a>
+        
+
+        <a class="card" href="https://huggingface.co/learn/llm-course/chapter1/1" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">Hugging Face LLM Course</div>
+            <div class="card-body">你说语言、图片、视频大模型都不熟，所以需要先把 Transformer/LLM 生态学懂，后面视频模型里的文本编码、token、attention 都会更好理解。</div>
+            
+            <div class="card-tags"><span class="tag">Transformer</span><span class="tag">必学</span><span class="tag">课程</span></div>
+        </a>
+        
+
+        <a class="card" href="https://huggingface.co/learn/computer-vision-course/en/unit0/welcome/welcome" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">Hugging Face Computer Vision Course</div>
+            <div class="card-body">补视觉大模型、ViT、多模态和视频处理相关背景。</div>
+            
+            <div class="card-tags"><span class="tag">视觉</span><span class="tag">建议</span><span class="tag">课程</span></div>
+        </a>
+        
+
+        <a class="card" href="https://huggingface.co/learn/diffusion-course/unit0/1" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">Hugging Face Diffusion Course</div>
+            <div class="card-body">从图像扩散模型打基础：噪声、scheduler、UNet/DiT、fine-tuning、guidance、Diffusers 工程实践。</div>
+            
+            <div class="card-tags"><span class="tag">扩散</span><span class="tag">必学</span><span class="tag">课程</span></div>
+        </a>
+        
+
+        <a class="card" href="https://learn.deeplearning.ai/courses/diffusion-models/information" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">How Diffusion Models Work</div>
+            <div class="card-body">把扩散模型从数学和训练流程角度理顺，适合作为 HF Diffusion Course 的补充。</div>
+            
+            <div class="card-tags"><span class="tag">扩散</span><span class="tag">必学</span><span class="tag">课程</span></div>
+        </a>
+        
+      </div>
+
+      <div class="section-head" style="margin-top:28px;">
+        <div>
+          <h2>工程文档与训练工具</h2>
+          <p>这些是你把“看论文”变成“自己能训、能跑、能部署”的桥梁。</p>
+        </div>
+      </div>
+      <div class="grid">
+        
+        <a class="card" href="https://huggingface.co/docs/diffusers/index" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">Diffusers 官方文档</div>
+            <div class="card-body">你做视频大模型实践时，最值得先掌握的开源库之一。现在已经支持大量视频模型与训练/推理范式。</div>
+            
+            <div class="card-tags"><span class="tag">工程</span><span class="tag">必学</span><span class="tag">文档</span></div>
+        </a>
+        
+
+        <a class="card" href="https://huggingface.co/blog/video_gen" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">State of open video generation models in Diffusers</div>
+            <div class="card-body">帮你快速建立对开源视频模型版图的全局认知：谁开源、谁闭源、谁偏研究、谁偏实用。</div>
+            
+            <div class="card-tags"><span class="tag">视频</span><span class="tag">必学</span><span class="tag">综述</span></div>
+        </a>
+        
+
+        <a class="card" href="https://huggingface.co/docs/diffusers/main/en/training/cogvideox" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">CogVideoX 训练文档（Diffusers）</div>
+            <div class="card-body">非常适合你学习“视频模型训练脚本长什么样、数据怎么组织、显存和分布式怎么配”。</div>
+            
+            <div class="card-tags"><span class="tag">视频训练</span><span class="tag">必学</span><span class="tag">文档</span></div>
+        </a>
+        
+
+        <a class="card" href="https://huggingface.co/docs/diffusers/main/en/api/pipelines/wan" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">Wan in Diffusers</div>
+            <div class="card-body">Wan 目前是最值得跟的开源视频基座之一，Diffusers 已经支持其多个任务变体。</div>
+            
+            <div class="card-tags"><span class="tag">视频</span><span class="tag">必学</span><span class="tag">文档</span></div>
+        </a>
+        
+
+        <a class="card" href="https://github.com/huggingface/finetrainers" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">Finetrainers（Hugging Face）</div>
+            <div class="card-body">如果你想从“会跑模型”走到“会训练视频 LoRA/Control/微调”，这是非常重要的一套训练工具。</div>
+            
+            <div class="card-tags"><span class="tag">训练</span><span class="tag">建议</span><span class="tag">工具</span></div>
+        </a>
+        
+
+        <a class="card" href="https://github.com/huggingface/finetrainers/blob/main/docs/models/wan.md" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">Wan Training（Finetrainers 文档）</div>
+            <div class="card-body">面向 Wan 的训练说明。用它来学 LoRA / full finetune 的配置方式很合适。</div>
+            
+            <div class="card-tags"><span class="tag">训练</span><span class="tag">建议</span><span class="tag">文档</span></div>
+        </a>
+        
+
+        <a class="card" href="https://docs.pytorch.org/tutorials/intermediate/FSDP_tutorial.html" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">Getting Started with FSDP2</div>
+            <div class="card-body">当模型训练大到单卡放不下时，你必须学会参数分片；FSDP2 是 PyTorch 官方推荐路线。</div>
+            
+            <div class="card-tags"><span class="tag">系统</span><span class="tag">必学</span><span class="tag">分布式</span></div>
+        </a>
+        
+
+        <a class="card" href="https://huggingface.co/docs/accelerate/en/usage_guides/fsdp" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">Accelerate FSDP Guide</div>
+            <div class="card-body">把 Hugging Face 训练脚本和 FSDP 拼起来时很好用。</div>
+            
+            <div class="card-tags"><span class="tag">系统</span><span class="tag">建议</span><span class="tag">分布式</span></div>
+        </a>
+        
+
+        <a class="card" href="https://www.deepspeed.ai/tutorials/zero/" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">DeepSpeed ZeRO</div>
+            <div class="card-body">另一条主流大模型训练路线。你需要知道 ZeRO-1/2/3 是什么、和 FSDP 的关系是什么。</div>
+            
+            <div class="card-tags"><span class="tag">系统</span><span class="tag">必学</span><span class="tag">分布式</span></div>
+        </a>
+        
+
+        <a class="card" href="https://github.com/Dao-AILab/flash-attention" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">FlashAttention</div>
+            <div class="card-body">注意力算子优化是视频模型训练/推理性能的关键基础设施之一。</div>
+            
+            <div class="card-tags"><span class="tag">系统</span><span class="tag">必学</span><span class="tag">优化</span></div>
+        </a>
+        
+
+        <a class="card" href="https://github.com/xdit-project/xDiT" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">xDiT</div>
+            <div class="card-body">DiT 视频模型要商用部署，推理并行化是绕不开的；xDiT 是这个方向的重要开源引擎。</div>
+            
+            <div class="card-tags"><span class="tag">推理</span><span class="tag">必学</span><span class="tag">优化</span></div>
+        </a>
+        
+
+        <a class="card" href="https://github.com/pytorch/torchtitan" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">TorchTitan</div>
+            <div class="card-body">理解 PyTorch 原生大模型训练框架和大规模实验组织方式。</div>
+            
+            <div class="card-tags"><span class="tag">系统</span><span class="tag">进阶</span><span class="tag">训练</span></div>
+        </a>
+        
+      </div>
+    </section>
+
+    <section id="models" class="anchor">
+      <div class="section-head">
+        <div>
+          <h2>最值得你跟进的开源视频模型</h2>
+          <p>我按“适不适合作为你现在的起步基座”来排，而不是只按参数大或 demo 漂亮来排。</p>
+        </div>
+      </div>
+      <div class="grid two">
+        
+        <a class="card" href="https://github.com/Wan-Video/Wan2.1" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">Wan2.1</div>
+            <div class="card-body">我最推荐你作为第一个视频大模型基座。它有 1.3B / 14B 两档；1.3B 很适合本地推理入门，14B 适合你理解更强的视频生成架构。</div>
+            <div class="meta"><strong>License：</strong>Apache-2.0</div><div class="meta"><strong>更适合什么：</strong>适合：商业化方向的第一站、从推理到 LoRA 再到评测的完整学习</div>
+            <div class="card-tags"></div>
+        </a>
+        
+
+        <a class="card" href="https://github.com/Wan-Video/Wan2.2" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">Wan2.2</div>
+            <div class="card-body">比 Wan2.1 更接近“工业级视频生成”路线，加入了 MoE、TI2V、角色动画、音频驱动等更完整能力。</div>
+            <div class="meta"><strong>License：</strong>Apache-2.0</div><div class="meta"><strong>更适合什么：</strong>适合：你打基础后，向多模态控制、角色动画、音视频方向升级</div>
+            <div class="card-tags"></div>
+        </a>
+        
+
+        <a class="card" href="https://github.com/zai-org/CogVideo" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">CogVideoX</div>
+            <div class="card-body">论文、工程、Diffusers 训练文档都比较齐；很适合拿来学习视频 DiT、3D causal VAE、数据格式和训练脚本。</div>
+            <div class="meta"><strong>License：</strong>自定义商用条款（需看 MODEL_LICENSE）</div><div class="meta"><strong>更适合什么：</strong>适合：学习训练流程；但若你最终目标是无障碍商用，要额外看 license</div>
+            <div class="card-tags"></div>
+        </a>
+        
+
+        <a class="card" href="https://github.com/genmoai/mochi" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">Mochi 1</div>
+            <div class="card-body">开源视频模型里非常重要的一支，AsymmDiT 架构值得认真读；官方还给了 LoRA 微调路线。</div>
+            <div class="meta"><strong>License：</strong>Apache-2.0</div><div class="meta"><strong>更适合什么：</strong>适合：你有较强 GPU 资源后学习高质量视频 LoRA</div>
+            <div class="card-tags"></div>
+        </a>
+        
+
+        <a class="card" href="https://github.com/Lightricks/LTX-2" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">LTX-2</div>
+            <div class="card-body">如果你的长期目标是接近 Seedance 2.0 这种“音画联合 + 导演级控制”方向，LTX-2 非常值得研究，因为它是公开的音视频联合基座，并带官方 trainer。</div>
+            <div class="meta"><strong>License：</strong>LTX-2 Community License</div><div class="meta"><strong>更适合什么：</strong>适合：想系统学习音视频联合生成、官方 trainer、两阶段/上采样流水线</div>
+            <div class="card-tags"></div>
+        </a>
+        
+
+        <a class="card" href="https://github.com/Tencent-Hunyuan/HunyuanVideo" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">HunyuanVideo / HunyuanVideo-1.5</div>
+            <div class="card-body">很适合学习工业级系统设计：数据策划、图像-视频联合训练、MLLM 文本编码、3D VAE、并行推理。</div>
+            <div class="meta"><strong>License：</strong>Tencent Hunyuan Community License</div><div class="meta"><strong>更适合什么：</strong>适合：研究和系统学习；全球商用前必须仔细审查条款</div>
+            <div class="card-tags"></div>
+        </a>
+        
+      </div>
+    </section>
+
+    <section id="roadmap" class="anchor">
+      <div class="section-head">
+        <div>
+          <h2>实践路线图</h2>
+          <p>别从“从零预训练”开始。先把最小闭环做出来，再一点点把难度抬高。</p>
+        </div>
+      </div>
+      <div class="grid two">
+        
+        <section class="phase">
+            <h3>阶段 A：先把基础补齐（2–6 周）</h3>
+            <p class="phase-goal">目标：先学会‘模型是怎么训练出来的’，不要一上来就追 13B/19B 视频基座。</p>
+            <ul><li>Machine Learning Specialization + PyTorch Tutorials</li><li>Karpathy Zero to Hero，把反向传播和训练循环真正理解</li><li>Hugging Face LLM Course，建立 Transformer 直觉</li><li>CS231n / HF CV Course 补视觉基础</li></ul>
+        </section>
+        
+
+        <section class="phase">
+            <h3>阶段 B：先学图像扩散，再进视频（2–4 周）</h3>
+            <p class="phase-goal">目标：先把 diffusion 的基本物理感学出来，再进入视频。</p>
+            <ul><li>Hugging Face Diffusion Course</li><li>DeepLearning.AI 的 How Diffusion Models Work</li><li>用 Diffusers 跑一个图像训练/微调例子，理解 scheduler、guidance、latent、pipeline</li></ul>
+        </section>
+        
+
+        <section class="phase">
+            <h3>阶段 C：跑通开源视频模型（1–2 周）</h3>
+            <p class="phase-goal">目标：先会‘用’，再会‘训’。</p>
+            <ul><li>本地先跑 Wan2.1 1.3B 或 CogVideoX-2B 做 text-to-video / image-to-video</li><li>固定一组 prompt，建立自己的‘评测小基准’</li><li>记录 prompt → 输出视频 → 失败模式：抖动、主体崩坏、动作不合理、镜头乱飘</li></ul>
+        </section>
+        
+
+        <section class="phase">
+            <h3>阶段 D：第一次真正训练（2–6 周）</h3>
+            <p class="phase-goal">目标：从小规模 LoRA 开始，别直接 full pretrain。</p>
+            <ul><li>选一个单一目标：品牌吉祥物、人物风格、镜头语言、产品展示、某个动作特效</li><li>准备 100–1000 段自己可用的视频片段，做 caption / 过滤 / 统一 fps / 分辨率</li><li>用 Wan / CogVideoX / Mochi / LTX-2 的 LoRA 路线跑第一版微调</li><li>每 200–500 step 做一次固定 prompt 验证，不要盲目长训</li></ul>
+        </section>
+        
+
+        <section class="phase">
+            <h3>阶段 E：构建商用原型（4–8 周）</h3>
+            <p class="phase-goal">目标：从‘能生成’走到‘能上线’。</p>
+            <ul><li>做一个最小 API / Web Demo：任务提交、排队、生成、结果回传</li><li>接入固定评测集 + 人工审核 + 滥用拦截</li><li>为输出添加来源标记 / 透明度说明</li><li>算清楚每条视频的 GPU 成本、排队时延、缓存命中率</li></ul>
+        </section>
+        
+
+        <section class="phase">
+            <h3>阶段 F：再考虑更大目标（长期）</h3>
+            <p class="phase-goal">目标：逐步逼近 Seedance 2.0 这类统一多模态体系。</p>
+            <ul><li>加入音频驱动、角色动画、TI2V、视频编辑、参考视频控制</li><li>研究统一音视频 transformer / 3D VAE / MLLM text encoder</li><li>只有当你已经把 LoRA、数据管线、评测、部署打通，才建议考虑较大规模再预训练或大范围 continual pretraining</li></ul>
+        </section>
+        
+      </div>
+    </section>
+
+    <section id="projects" class="anchor">
+      <div class="section-head">
+        <div>
+          <h2>建议你按这个顺序做项目</h2>
+          <p>项目比“多看十篇论文”更能让你真正理解视频大模型训练。</p>
+        </div>
+      </div>
+      <div class="grid">
+        
+        <section class="project-card">
+            <h3>项目 1：本地跑通一个视频基座</h3>
+            <p>推荐先做 Wan2.1 1.3B。目标不是出神片，而是理解 prompt、resolution、fps、seed、scheduler、负面提示这些变量对结果的影响。</p>
+        </section>
+        
+
+        <section class="project-card">
+            <h3>项目 2：自己做一个小型视频数据集</h3>
+            <p>把你自己的素材切成短片段，统一长度 / fps / 分辨率，给每个 clip 写 caption，建立 metadata.csv。你会在这个项目里第一次真正理解‘数据 &gt; 模型技巧’。</p>
+        </section>
+        
+
+        <section class="project-card">
+            <h3>项目 3：训练一个 LoRA</h3>
+            <p>只做一个窄目标：固定角色、固定风格、固定品牌物料、固定镜头动作。LoRA 的核心是让你学会验证与迭代，而不是一口吃成胖子。</p>
+        </section>
+        
+
+        <section class="project-card">
+            <h3>项目 4：做一套固定评测集</h3>
+            <p>建立 30–100 条固定提示词：人物动作、复杂镜头、动物、物理常识、文字、多人交互。每次模型更新都重跑。</p>
+        </section>
+        
+
+        <section class="project-card">
+            <h3>项目 5：做一个商用化雏形</h3>
+            <p>最小闭环：用户上传参考图 / 文本 → 任务队列 → 模型生成 → 存储输出 → 展示结果 → 记录日志与失败原因。</p>
+        </section>
+        
+      </div>
+      <div class="callout">
+        <strong>第一版训练目标一定要窄：</strong>
+        不要先做“任何内容都能生成”的世界模型。先做一个 <strong>固定角色 / 固定品牌 / 固定镜头语言 / 固定题材</strong> 的 LoRA，
+        你会更快体会到数据质量、过拟合、验证和泛化之间的关系。
+      </div>
+    </section>
+
+    <section id="license" class="anchor">
+      <div class="section-head">
+        <div>
+          <h2>商用前必须看的 License 观察表</h2>
+          <p>想做商用，千万不要只看效果；数据和模型条款会直接决定你后面能不能真正上线。</p>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>模型</th>
+              <th>我的判断</th>
+              <th>你要注意的点</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Wan2.1 / Wan2.2</td><td>最适合你现在作为商用学习基座</td><td>仓库标注 Apache-2.0；仍建议上线前再核对权重与依赖条款</td></tr>
+<tr><td>Mochi 1</td><td>适合作为开放、偏研究又可商用的高质量路线</td><td>官方模型卡与仓库均写明 Apache-2.0</td></tr>
+<tr><td>CogVideoX</td><td>很适合学训练，但商用需要额外看 license</td><td>官方 MODEL_LICENSE 要求商业用户登记基础商用授权；超过 100 万月访问量需进一步商业授权</td></tr>
+<tr><td>HunyuanVideo 1.5</td><td>强，但更适合研究/系统学习</td><td>社区许可明确排除欧盟、英国、韩国；且限制用其输出改进其他 AI 模型</td></tr>
+<tr><td>LTX-2</td><td>非常值得学音视频联合，但不是无条件自由商用</td><td>社区许可写明年收入 ≥ 1000 万美元的商业实体需要付费商业授权</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout">
+        <strong>我的偏向建议：</strong>
+        如果你的目标从一开始就明确是“未来可商用”，那你最该优先投入的是
+        <strong>Wan2.1 / Wan2.2 + 自有/明确授权数据 + 自建评测集 + 输出治理</strong>。
+      </div>
+    </section>
+
+    <section id="papers" class="anchor">
+      <div class="section-head">
+        <div>
+          <h2>论文、技术报告与评测基准</h2>
+          <p>这里放的是你后面会反复回看的核心资料。</p>
+        </div>
+      </div>
+      <div class="grid">
+        
+        <a class="card" href="https://seed.bytedance.com/en/seedance2_0" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">Seedance 2.0 官方页</div>
+            <div class="card-body">用来理解你的目标长什么样：统一音视频多模态、支持 text/image/audio/video 输入、强调导演级控制。</div>
+            
+            <div class="card-tags"></div>
+        </a>
+        
+
+        <a class="card" href="https://arxiv.org/abs/2408.06072" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">CogVideoX 论文</div>
+            <div class="card-body">学习 3D causal VAE、expert transformer、视频扩散主干。</div>
+            
+            <div class="card-tags"></div>
+        </a>
+        
+
+        <a class="card" href="https://arxiv.org/abs/2412.03603" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">HunyuanVideo 论文</div>
+            <div class="card-body">学习大规模开源视频基础模型怎么做数据、架构、训练、推理系统。</div>
+            
+            <div class="card-tags"></div>
+        </a>
+        
+
+        <a class="card" href="https://arxiv.org/abs/2503.20314" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">Wan 论文</div>
+            <div class="card-body">学习当前强开源视频套件在 VAE、预训练、数据策划、自动评测上的组合打法。</div>
+            
+            <div class="card-tags"></div>
+        </a>
+        
+
+        <a class="card" href="https://huggingface.co/genmo/mochi-1-preview" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">Mochi 1（官方仓库/模型卡）</div>
+            <div class="card-body">看 AsymmDiT、开源高质量视频生成、LoRA 路线。</div>
+            
+            <div class="card-tags"></div>
+        </a>
+        
+
+        <a class="card" href="https://arxiv.org/abs/2601.03233" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">LTX-2 论文</div>
+            <div class="card-body">重点看统一音视频扩散 transformer、双流架构、跨模态对齐。</div>
+            
+            <div class="card-tags"></div>
+        </a>
+        
+
+        <a class="card" href="https://github.com/NJU-PCALab/OpenVid-1M" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">OpenVid-1M</div>
+            <div class="card-body">理解公开视频数据集如何做高质量 text-video pairs、质量过滤和高清子集。</div>
+            
+            <div class="card-tags"></div>
+        </a>
+        
+
+        <a class="card" href="https://github.com/Vchitect/VBench" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">VBench</div>
+            <div class="card-body">建立“怎么评测视频生成模型”的意识，不要只靠主观感觉。</div>
+            
+            <div class="card-tags"></div>
+        </a>
+        
+
+        <a class="card" href="https://vchitect.github.io/VBench-2.0-project/" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">VBench-2.0</div>
+            <div class="card-body">进一步理解人类保真度、可控性、创造力、物理一致性、常识等更高阶评测维度。</div>
+            
+            <div class="card-tags"></div>
+        </a>
+        
+
+        <a class="card" href="https://github.com/Video-Bench/Video-Bench" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">Video-Bench</div>
+            <div class="card-body">补充另一类更贴近人类偏好的视频评测思路。</div>
+            
+            <div class="card-tags"></div>
+        </a>
+        
+      </div>
+    </section>
+
+    <section id="compliance" class="anchor">
+      <div class="section-head">
+        <div>
+          <h2>数据、透明度与合规</h2>
+          <p>未来能不能做成真正的商业产品，很多时候不取决于模型本身，而取决于这部分。</p>
+        </div>
+      </div>
+      <div class="grid">
+        
+        <a class="card" href="https://huggingface.co/datasets/PleIAs/YouTube-Commons" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">YouTube-Commons</div>
+            <div class="card-body">这是我最建议你拿来练数据管线意识的公开集合之一：它明确写了视频来自 YouTube 的 CC-BY 内容，并带 provenance 信息。</div>
+            
+            <div class="card-tags"></div>
+        </a>
+        
+
+        <a class="card" href="https://contentcredentials.org/" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">Content Credentials</div>
+            <div class="card-body">做商用生成平台时，建议尽早学习内容来源标记、可验证元数据和媒体真实性。</div>
+            
+            <div class="card-tags"></div>
+        </a>
+        
+
+        <a class="card" href="https://spec.c2pa.org/specifications/specifications/2.2/specs/C2PA_Specification.html" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">C2PA 技术规范</div>
+            <div class="card-body">如果以后你要做商用产品，这类 provenance / tamper-evident 标准值得尽早关注。</div>
+            
+            <div class="card-tags"></div>
+        </a>
+        
+
+        <a class="card" href="https://www.nist.gov/publications/artificial-intelligence-risk-management-framework-generative-artificial-intelligence" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">NIST Generative AI Profile</div>
+            <div class="card-body">帮你建立商用系统的风控视角：安全、透明、可解释、治理。</div>
+            
+            <div class="card-tags"></div>
+        </a>
+        
+
+        <a class="card" href="https://www.copyright.gov/ai/Copyright-and-Artificial-Intelligence-Part-3-Generative-AI-Training-Report-Pre-Publication-Version.pdf" target="_blank" rel="noopener noreferrer">
+            <div class="card-title">US Copyright Office：Generative AI Training Report</div>
+            <div class="card-body">做商用前别只看模型效果，一定要看训练数据、授权、市场替代性和版权风险。</div>
+            
+            <div class="card-tags"></div>
+        </a>
+        
+      </div>
+      <div class="callout">
+        <strong>做商用时最容易忽略的三件事：</strong>
+        1）训练数据的版权与授权链；2）人物、品牌、影视 IP 的侵权风险；3）输出内容的来源标识和滥用防护。
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p>更新时间：2026-03-13</p>
+      <p class="small">
+        说明：本页优先放官方仓库、官方文档、论文页和高可信资料；但模型 license、数据 license 和服务条款会变化，
+        你在真正上线前仍然需要逐项复核。
+      </p>
+    </footer>
+  </main>
+</body>
+</html>
